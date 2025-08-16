@@ -1,0 +1,36 @@
+{
+  "order": [
+    "off",
+    "beauty",
+    "products",
+    "ean_db",
+    "il_prices"
+  ],
+  "off": {
+    "enabled": true,
+    "locales": [
+      "world",
+      "he"
+    ]
+  },
+  "beauty": {
+    "enabled": true
+  },
+  "products": {
+    "enabled": true
+  },
+  "ean_db": {
+    "enabled": false,
+    "api_key": "PUT_YOUR_KEY_LATER"
+  },
+  "il_prices": {
+    "enabled": true,
+    "sources": [
+      "shufersal",
+      "ramilevy"
+    ]
+  },
+  "fallback": {
+    "suggest_alternatives_if_empty": true
+  }
+}

@@ -3,256 +3,164 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Сканер «чистых продуктов» — с камерой (v1.3 — full)</title>
-  <meta name="description" content="Сканер чистых продуктов: камера с авто-выбором основной 1×, рамка-наводка, звук/вибро, глубокий поиск (OFF world+he, Open Beauty, Open Products), оценка чистоты, альтернативы." />
+  <title>Сканер «чистых продуктов» — v1.4 (data-enabled)</title>
+  <meta name="description" content="Сканер чистых продуктов: камера, OFF/Beauty/Products, загрузка конфигов из data/*.json, светофор, альтернативы." />
   <style>
     :root { --bg:#0f1221; --card:#171a2c; --text:#e7e9ff; --muted:#a8b2d1; --accent:#7aa2ff;
-      --good:#30d158; --warn:#ffd60a; --bad:#ff453a; --border:#2a2f4a; --overlay:#0a0d20e0; --green:#2ddb73; }
+      --good:#30d158; --warn:#ffd60a; --bad:#ff453a; --border:#2a2f4a; --green:#2ddb73; }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"SF Pro Text",Inter,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";background:radial-gradient(1200px 800px at 70% -10%,#1f2440 0%,var(--bg) 45%);color:var(--text)}
-    header{padding:24px 16px 8px;text-align:center}
-    h1{margin:0;font-size:clamp(20px,4vw,28px);letter-spacing:.2px}
-    .sub{color:var(--muted);margin-top:6px;font-size:14px}
-    .wrap{max-width:980px;margin:0 auto;padding:16px}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.03);padding:18px;margin-bottom:16px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 220px}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Inter,Segoe UI,Roboto,Helvetica,Arial;background:#0c1022;color:var(--text)}
+    header{padding:20px 14px;text-align:center;background:linear-gradient(180deg,#1a2140,#0c1022)}
+    h1{margin:0;font-size:clamp(18px,4vw,26px)}
+    .sub{color:var(--muted);margin-top:6px;font-size:13px}
+    .wrap{max-width:980px;margin:0 auto;padding:14px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.03);padding:16px;margin-bottom:14px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 220px}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input[type="text"]{width:100%;padding:14px;border:1px solid var(--border);border-radius:14px;background:#0d1020;color:var(--text);outline:none;font-size:16px}
-    input[type="text"]::placeholder{color:#7982a7}
-    button{appearance:none;border:0;cursor:pointer;padding:14px 16px;border-radius:14px;background:linear-gradient(180deg,#2b57ff,#2147d8);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 20px rgba(59,97,255,.3)}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .mutebtn{background:#1a1f36;box-shadow:inset 0 0 0 1px var(--border);color:var(--text)}
-    .tiny{font-size:12px;padding:10px 12px}
-    .note{font-size:12px;color:var(--muted);margin-top:12px}
-    .result{padding:8px 0 0}
-    .title{font-size:18px;font-weight:700;margin-bottom:6px}
-    .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
-    .badge{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;font-weight:700;background:#10132a;border:1px solid var(--border)}
-    .score{font-size:26px;font-weight:800;letter-spacing:.3px}.light{font-size:22px}
+    input[type="text"]{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:#0d1228;color:var(--text);outline:none;font-size:16px}
+    button{appearance:none;border:0;cursor:pointer;padding:12px 14px;border-radius:12px;background:linear-gradient(180deg,#2b57ff,#2147d8);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 20px rgba(59,97,255,.3)}
+    button.mute{background:#1a1f36;box-shadow:inset 0 0 0 1px var(--border);color:var(--text)}
+    .tiny{font-size:12px;padding:9px 11px}
+    .note{font-size:12px;color:var(--muted);margin-top:8px}
+    .title{font-size:18px;font-weight:800;margin-bottom:6px}
+    .code{font-family:ui-monospace,Menlo,monospace;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:9px 11px;border-radius:999px;font-weight:800;background:#10132a;border:1px solid var(--border)}
     .good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-    ul{margin:8px 0 0 18px;padding:0}li{margin:4px 0}
-    .grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}@media(min-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    .alt-item{padding:10px 12px;border-radius:14px;border:1px solid var(--border);background:#0f1328}
-    .alt-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-    .footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 0 40px}
-    .src{color:var(--accent);text-decoration:none}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#0c0f22;color:var(--muted);font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:10px}
+    @media(min-width:820px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .alt{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#0f1328}
     .camera{display:none;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;position:relative}
-    video{width:100%;max-height:380px;border-radius:14px;border:1px solid var(--border);background:#000}
-    .overlay{position:absolute;inset:0;border-radius:14px;pointer-events:none}
-    .ov-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88%,520px);height:48%;outline:2px solid var(--green);border-radius:14px;box-shadow:0 0 0 9999px rgba(12,13,26,.6) inset}
-    .ov-corners:before,.ov-corners:after{content:"";position:absolute;border:3px solid var(--green);width:30px;height:30px}
-    .ov-corners:before{left:calc(50% - min(44%,260px));top:calc(50% - 24%);border-right:none;border-bottom:none;border-radius:10px 0 0 0}
-    .ov-corners:after{right:calc(50% - min(44%,260px));bottom:calc(50% - 24%);border-left:none;border-top:none;border-radius:0 0 10px 0}
+    video{width:100%;max-height:360px;border-radius:12px;border:1px solid var(--border);background:#000}
+    .overlay{position:absolute;inset:0;border-radius:12px;pointer-events:none}
+    .ov-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88%,520px);height:46%;outline:2px solid var(--green);border-radius:12px;box-shadow:0 0 0 9999px rgba(12,13,26,.6) inset}
     .ov-status{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:#0b0f20;border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-size:12px;color:#cbd3ff}
     select{width:100%;padding:10px;border-radius:10px;background:#0d1020;color:var(--text);border:1px solid var(--border)}
-    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#11152e;color:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:10px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,.4);opacity:0;transition:opacity .2s}
-    .toast.show{opacity:1}
-    .history{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#0c0f22;color:var(--muted);font-size:12px}
+    .ok{color:#7fffb7}.err{color:#ff8f8f}
+    .hist{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
     .chip{border:1px solid var(--border);background:#0d1020;color:var(--text);border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
-    .ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .range{display:flex;gap:8px;align-items:center}
-    input[type="range"]{width:200px}
   </style>
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
 <body>
   <header>
-    <h1>Сканер «чистых продуктов» — v1.3 (full)</h1>
-    <div class="sub">OFF world + he • Open Beauty Facts • Open Products Facts • Русский интерфейс • Личные данные не сохраняются</div>
+    <h1>Сканер «чистых продуктов» — v1.4 (data-enabled)</h1>
+    <div class="sub">OFF world + he • Open Beauty Facts • Open Products Facts • Загрузка конфигов из <code>data/*.json</code></div>
   </header>
 
   <div class="wrap">
     <div class="card">
       <div class="row">
         <div>
-          <label>Штрих-код (EAN/UPC)</label>
+          <label>Штрих-код</label>
           <input id="barcode" type="text" placeholder="например: 5449000000996" inputmode="numeric" />
-          <div class="history" id="hist"></div>
+          <div class="hist" id="hist"></div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
           <button id="checkBtn">Проверить</button>
-          <button id="demoBtn" class="mutebtn" title="Демо-код Coca-Cola">Демо</button>
-          <button id="camBtn" class="mutebtn" title="Сканировать камерой">Сканировать камерой</button>
-          <button id="stopBtn" class="mutebtn tiny" title="Остановить камеру" disabled>Стоп</button>
+          <button id="demoBtn" class="mute">Демо</button>
+          <button id="camBtn" class="mute">Сканировать камерой</button>
+          <button id="stopBtn" class="mute tiny" disabled>Стоп</button>
         </div>
       </div>
       <div class="camera" id="camWrap">
         <div style="flex:2 1 260px;position:relative">
           <video id="preview" muted playsinline></video>
           <div class="overlay">
-            <div class="ov-window ov-corners"></div>
+            <div class="ov-window"></div>
             <div id="ovStatus" class="ov-status">Готово к скану…</div>
           </div>
         </div>
         <div style="flex:1 1 260px">
           <label>Камера</label>
           <select id="cameraSelect"></select>
-          <div class="ctl" style="margin-top:10px">
-            <button id="torchBtn" class="mutebtn tiny" disabled>Фонарик</button>
-            <button id="focusBtn" class="mutebtn tiny" disabled>Автофокус</button>
-            <div class="range"><span>Зум ×<span id="zoomVal">1.0</span></span><input id="zoom" type="range" min="1" max="1" step="0.01" value="1" disabled></div>
-            <button id="soundBtn" class="mutebtn tiny">Звук: вкл</button>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button id="torchBtn" class="mute tiny" disabled>Фонарик</button>
+            <button id="focusBtn" class="mute tiny" disabled>Автофокус</button>
+            <button id="soundBtn" class="mute tiny">Звук: вкл</button>
           </div>
           <div class="note" id="camName"></div>
         </div>
       </div>
       <div class="note">
-        Наведи код внутри рамки. При успешном считывании — <b>щёлк</b> + <b>вибро</b>. На iPhone используй заднюю камеру <b>1×</b>.
+        Данные: <span id="dataStatus" class="err">не загружены</span>. Папка <code>data/</code> должна лежать рядом с <code>index.html</code>.
       </div>
     </div>
 
-    <div id="out" class="result"></div>
+    <div id="out"></div>
 
-    <div class="footer">
-      Атрибуция: <a class="src" href="https://openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> / <a class="src" href="https://openbeautyfacts.org" target="_blank" rel="noopener">Open Beauty Facts</a> / <a class="src" href="https://world.openproductsfacts.org" target="_blank" rel="noopener">Open Products Facts</a>.
+    <div class="card">
+      <div class="title">Атрибуция</div>
+      <div class="note">
+        Источники: <a href="https://openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a>,
+        <a href="https://openbeautyfacts.org" target="_blank" rel="noopener">Open Beauty Facts</a>,
+        <a href="https://world.openproductsfacts.org" target="_blank" rel="noopener">Open Products Facts</a>.
+        Личные данные не сохраняются.
+      </div>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-
 <script>
-const API_WORLD = 'https://world.openfoodfacts.org/api/v2/product/{barcode}.json';
-const API_HE    = 'https://he.openfoodfacts.org/api/v2/product/{barcode}.json';
-const API_BEAUTY= 'https://world.openbeautyfacts.org/api/v2/product/{barcode}.json';
-const API_PROD  = 'https://world.openproductsfacts.org/api/v2/product/{barcode}.json';
-const SEARCH_WORLD = 'https://world.openfoodfacts.org/api/v2/search';
-const SEARCH_HE    = 'https://he.openfoodfacts.org/api/v2/search';
-const SEARCH_BEAUTY= 'https://world.openbeautyfacts.org/api/v2/search';
-const SEARCH_PROD  = 'https://world.openproductsfacts.org/api/v2/search';
+// ====== GLOBAL STATE ======
+const $ = sel => document.querySelector(sel);
+const DATA = {
+  providers: null, additives: null, allergens: null, localRules: null,
+  alternativesSeed: null, brandsMap: null, ilPriceFeeds: null
+};
 
-const $ = (sel) => document.querySelector(sel);
-function listify(x){ if(x==null) return []; return Array.isArray(x) ? x : [x]; }
-function getFloat(v){ const f = parseFloat(v); return Number.isFinite(f) ? f : null; }
-function esc(s){ return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
-function toast(msg, ms=1600){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
-
-// EAN-13
+function listify(x){ if(!x) return []; return Array.isArray(x) ? x : [x]; }
+function esc(s){ return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]); }
 function isValidEAN13(code){
   if(!/^[0-9]{13}$/.test(code)) return false;
-  const digits = code.split('').map(d=>parseInt(d,10));
-  const check = digits.pop();
-  const sum = digits.reduce((acc,d,i)=> acc + d * (i%2===0 ? 1 : 3), 0);
-  const calc = (10 - (sum % 10)) % 10;
-  return calc === check;
+  const d = code.split('').map(n=>+n); const check = d.pop();
+  const sum = d.reduce((a,v,i)=> a + v*(i%2?3:1), 0);
+  return ((10 - sum%10) % 10) === check;
 }
 
-// AUDIO (beep) + vibrate
-let ac = null; let soundOn = true;
-function initAudio(){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ ac=null; } }
-function beep(freq=880, dur=120){
-  if(!ac || !soundOn) return;
+async function loadJSON(path){
   try{
-    const t0 = ac.currentTime;
-    const o = ac.createOscillator();
-    const g = ac.createGain();
-    o.type = 'triangle'; o.frequency.value = freq;
-    g.gain.setValueAtTime(0.0001, t0);
-    o.connect(g); g.connect(ac.destination);
-    g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + (dur/1000));
-    o.start(t0); o.stop(t0 + (dur/1000) + 0.02);
-  }catch(e){/*ignore*/}
-}
-function vibrate(ms=30){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
-
-// SCORE
-function scoreProduct(p){
-  let reasons = [];
-  let score = 50.0;
-  const labels = listify(p.labels_tags).concat(listify(p.labels_old));
-  const isOrganic = labels.map(x=>String(x).toLowerCase()).some(tag => tag.includes('organic') || tag.includes('bio') || tag.includes('kosher'));
-  if(isOrganic){ score += 10; reasons.push('Органический/маркированный продукт (лейблы/теги)'); }
-  let additives_n = getFloat(p.additives_n);
-  if(additives_n==null){ additives_n = listify(p.additives_tags).length; }
-  if(additives_n!=null){
-    if(additives_n===0){ score+=12; reasons.push('Без добавок (E-чисел)'); }
-    else if(additives_n<=2){ score+=4; reasons.push(`Немного добавок: ${additives_n}`); }
-    else if(additives_n<=5){ score-=6; reasons.push(`Много добавок: ${additives_n}`); }
-    else { score-=15; reasons.push(`Очень много добавок: ${additives_n}`); }
-  }
-  let allergens = listify(p.allergens_tags).concat(listify(p.traces_tags)).map(a=>String(a).replace('en:','').replace('ru:','').toLowerCase());
-  allergens = Array.from(new Set(allergens)).filter(Boolean);
-  if(allergens.length){ score -= 6; reasons.push('Есть потенциальные аллергены/следы: ' + allergens.sort().slice(0,6).join(', ')); }
-  let nova = p.nova_group || p.nova_groups;
-  nova = parseInt(nova); if(!Number.isFinite(nova)) nova = null;
-  if(nova){
-    if(nova===1){ score+=10; reasons.push('NOVA 1 — минимально обработанный продукт'); }
-    else if(nova===2){ score+=5; reasons.push('NOVA 2 — базовая обработка'); }
-    else if(nova===3){ score-=5; reasons.push('NOVA 3 — обработанный продукт'); }
-    else if(nova>=4){ score-=12; reasons.push('NOVA 4 — ультрапереработанный продукт'); }
-  }
-  const n = p.nutriments || {};
-  const sugar = getFloat(n['sugars_100g']);
-  const salt = getFloat(n['salt_100g']);
-  const satfat = getFloat(n['saturated-fat_100g']) ?? getFloat(n['saturated_fat_100g']);
-  if(sugar!=null){
-    if(sugar<=2.5){ score+=6; reasons.push(`Низкий сахар: ${sugar} г/100г`); }
-    else if(sugar<=5){ score+=2; reasons.push(`Умеренный сахар: ${sugar} г/100г`); }
-    else if(sugar<=10){ score-=4; reasons.push(`Повышенный сахар: ${sugar} г/100г`); }
-    else { score-=10; reasons.push(`Очень высокий сахар: ${sugar} г/100г`); }
-  }
-  if(salt!=null){
-    if(salt<=0.3){ score+=4; reasons.push(`Низкая соль: ${salt} г/100г`); }
-    else if(salt<=1.2){ score+=1; reasons.push(`Умеренная соль: ${salt} г/100г`); }
-    else if(salt<=2){ score-=4; reasons.push(`Повышенная соль: ${salt} г/100г`); }
-    else { score-=8; reasons.push(`Очень высокая соль: ${salt} г/100г`); }
-  }
-  if(satfat!=null){
-    if(satfat<=1.5){ score+=3; reasons.push(`Низкие насыщенные жиры: ${satfat} г/100г`); }
-    else if(satfat<=5){ reasons.push(`Умеренные насыщенные жиры: ${satfat} г/100г`); }
-    else { score-=6; reasons.push(`Высокие насыщенные жиры: ${satfat} г/100г`); }
-  }
-  const ingr = String(p.ingredients_text_ru || p.ingredients_text || p.ingredients_text_he || '').toLowerCase();
-  if(ingr.includes('пальмов') || ingr.includes('palm oil') || ingr.includes('масло пальмов') || ingr.includes('שמן דקל')){
-    score -= 8; reasons.push('Содержит пальмовое масло');
-  }
-  let ingN = p.ingredients_n;
-  if(ingN==null && Array.isArray(p.ingredients)) ingN = p.ingredients.length;
-  ingN = parseInt(ingN);
-  if(Number.isFinite(ingN)){
-    if(ingN<=5){ score+=5; reasons.push(`Короткий список ингредиентов: ${ingN}`); }
-    else if(ingN<=10){ reasons.push(`Средний список ингредиентов: ${ingN}`); }
-    else { score-=4; reasons.push(`Длинный список ингредиентов: ${ingN}`); }
-  }
-  score = Math.round(Math.max(0, Math.min(100, score)));
-  const light = score>=70 ? '🟢 зелёный' : (score>=40 ? '🟡 жёлтый' : '🔴 красный');
-  reasons.unshift(`Светофор: ${light}`);
-  return { score, reasons, light };
+    const r = await fetch(path, { cache: 'no-store' });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){ console.warn('loadJSON failed', path, e); return null; }
 }
 
-function formatTitle(p){
-  const brand = String(p.brands||'').split(',')[0].trim();
-  let name = p.product_name_ru || p.product_name_he || p.product_name || p.generic_name || 'Без названия';
-  name = String(name);
-  if(brand && !name.toLowerCase().includes(brand.toLowerCase())){
-    return `${brand} — ${name}`;
-  }
-  return name || 'Без названия';
+async function loadData(){
+  DATA.providers      = await loadJSON('data/providers.config.json');
+  DATA.additives      = await loadJSON('data/additives_ru.json');
+  DATA.allergens      = await loadJSON('data/allergens_ru.json');
+  DATA.localRules     = await loadJSON('data/local_rules_il.json');
+  DATA.alternativesSeed = await loadJSON('data/alternatives_seed.json');
+  DATA.brandsMap      = await loadJSON('data/brands_map.json');
+  DATA.ilPriceFeeds   = await loadJSON('data/il_price_feeds_sources.json');
+  const ok = DATA.providers && DATA.additives && DATA.allergens && DATA.localRules;
+  $('#dataStatus').textContent = ok ? 'загружены' : 'частично';
+  $('#dataStatus').className = ok ? 'ok' : 'err';
+  return ok;
 }
-function isIL(p){
-  const code = String(p.code||'');
-  if(code.startsWith('729')) return true;
-  const ct = listify(p.countries_tags).map(x=>String(x).toLowerCase());
-  return ct.some(c=>c.includes('israel'));
-}
+
+// ====== PROVIDERS (OFF/Beauty/Products) ======
+const API = {
+  OFF: (bc) => `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  OFF_HE: (bc) => `https://he.openfoodfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  BEU: (bc) => `https://world.openbeautyfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  PRD: (bc) => `https://world.openproductsfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  SEARCH_OFF: `https://world.openfoodfacts.org/api/v2/search`,
+  SEARCH_OFF_HE: `https://he.openfoodfacts.org/api/v2/search`,
+  SEARCH_BEU: `https://world.openbeautyfacts.org/api/v2/search`,
+  SEARCH_PRD: `https://world.openproductsfacts.org/api/v2/search`
+};
 
 async function fetchJSON(url, params){
-  if(params){
-    const usp = new URLSearchParams(params);
-    url += '?' + usp.toString();
-  }
-  const res = await fetch(url);
-  if(!res.ok){
-    const err = new Error('HTTP '+res.status);
-    err.status = res.status;
-    throw err;
-  }
-  return await res.json();
+  const u = new URL(url);
+  if(params){ Object.entries(params).forEach(([k,v])=> u.searchParams.set(k,v)); }
+  const r = await fetch(u.toString());
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
 }
 
 function pickBest(products){
-  let best=null, bestScore=-1;
+  let best=null, score=-1;
   for(const p of (products||[])){
     let s=0;
     if(p.product_name || p.product_name_he || p.product_name_ru) s+=4;
@@ -262,368 +170,280 @@ function pickBest(products){
     if(p.nova_group || p.nova_groups) s+=1;
     if(p.code) s+=1;
     if(typeof p.completeness_score === 'number') s += Math.min(3, p.completeness_score);
-    if(s>bestScore){ best=p; bestScore=s; }
+    if(s>score){ score=s; best=p; }
   }
   return best;
 }
 
 async function deepFetch(barcode){
-  const endpoints = [
-    {type:'product', name:'OFF world', url: API_WORLD.replace('{barcode}', encodeURIComponent(barcode))},
-    {type:'product', name:'OFF he',    url: API_HE.replace('{barcode}', encodeURIComponent(barcode))},
-    {type:'product', name:'Beauty',    url: API_BEAUTY.replace('{barcode}', encodeURIComponent(barcode))},
-    {type:'product', name:'Products',  url: API_PROD.replace('{barcode}', encodeURIComponent(barcode))},
-  ];
-  const searches = [
-    {name:'OFF world search',  url: SEARCH_WORLD,  params: { code: barcode, lc:'he', cc:'il', page_size: 20, json:1 }},
-    {name:'OFF he search',     url: SEARCH_HE,     params: { code: barcode, lc:'he', cc:'il', page_size: 20, json:1 }},
-    {name:'Beauty search',     url: SEARCH_BEAUTY, params: { code: barcode, lc:'he', cc:'il', page_size: 20, json:1 }},
-    {name:'Products search',   url: SEARCH_PROD,   params: { code: barcode, lc:'he', cc:'il', page_size: 20, json:1 }},
-  ];
   const tried = [];
-  for(const ep of endpoints){
-    try{
-      const data = await fetchJSON(ep.url);
-      tried.push(ep.name);
-      if(data && (data.status===1 || data.product)){
-        return { product: data.product, source: ep.name, tried };
+  // OFF world + he
+  try{ const d=await fetchJSON(API.OFF(barcode)); tried.push('OFF world');
+       if(d && (d.status===1 || d.product)) return {product:d.product, source:'OFF world', tried}; }catch(e){ tried.push('OFF world(err)'); }
+  try{ const d=await fetchJSON(API.OFF_HE(barcode)); tried.push('OFF he');
+       if(d && (d.status===1 || d.product)) return {product:d.product, source:'OFF he', tried}; }catch(e){ tried.push('OFF he(err)'); }
+  // Beauty / Products
+  try{ const d=await fetchJSON(API.BEU(barcode)); tried.push('Open Beauty');
+       if(d && (d.status===1 || d.product)) return {product:d.product, source:'Open Beauty', tried}; }catch(e){ tried.push('Open Beauty(err)'); }
+  try{ const d=await fetchJSON(API.PRD(barcode)); tried.push('Open Products');
+       if(d && (d.status===1 || d.product)) return {product:d.product, source:'Open Products', tried}; }catch(e){ tried.push('Open Products(err)'); }
+  // Search fallbacks
+  const params = { page_size: 30, json: 1 };
+  try{ const d=await fetchJSON(API.SEARCH_OFF, {...params, code: barcode}); tried.push('OFF search');
+       const p=pickBest(d.products); if(p) return {product:p, source:'OFF search', tried}; }catch(e){ tried.push('OFF search(err)'); }
+  try{ const d=await fetchJSON(API.SEARCH_OFF_HE, {...params, code: barcode}); tried.push('OFF he search');
+       const p=pickBest(d.products); if(p) return {product:p, source:'OFF he search', tried}; }catch(e){ tried.push('OFF he search(err)'); }
+  try{ const d=await fetchJSON(API.SEARCH_BEU, {...params, code: barcode}); tried.push('Beauty search');
+       const p=pickBest(d.products); if(p) return {product:p, source:'Beauty search', tried}; }catch(e){ tried.push('Beauty search(err)'); }
+  try{ const d=await fetchJSON(API.SEARCH_PRD, {...params, code: barcode}); tried.push('Products search');
+       const p=pickBest(d.products); if(p) return {product:p, source:'Products search', tried}; }catch(e){ tried.push('Products search(err)'); }
+  return { notFound:true, tried };
+}
+
+// ====== SCORING ======
+function getFloat(v){ const f=parseFloat(v); return Number.isFinite(f)?f:null; }
+function normE(tag){ // "en:e211" -> "E211"
+  if(!tag) return null; const s=String(tag).split(':').pop().toUpperCase();
+  return s.startsWith('E') ? s : ('E'+s.replace(/[^\d]/g,''));
+}
+function scoreProduct(p){
+  let score = 50, reasons = [];
+  const lr = DATA.localRules || { thresholds:{ sugar_high_g_per_100g:10, salt_high_g_per_100g:1.2 } };
+
+  // labels
+  const labels = listify(p.labels_tags).concat(listify(p.labels_old)).map(x=>String(x).toLowerCase());
+  const positive = new Set((lr.labels_positive||[]).map(x=>String(x).toLowerCase()));
+  if(labels.some(x=> Array.from(positive).some(y=> x.includes(y)))){
+    score += 6; reasons.push('Положительные метки/сертификаты');
+  }
+
+  // additives (use dictionary if available)
+  let additives = listify(p.additives_tags).map(normE).filter(Boolean);
+  if(!additives.length && Number.isFinite(p.additives_n)) {
+    // только число — без списка
+    if(p.additives_n===0){ score+=10; reasons.push('Без добавок (E-чисел)'); }
+  } else if(additives.length){
+    const uniq = Array.from(new Set(additives));
+    const dict = DATA.additives || {};
+    let risky = [];
+    uniq.forEach(code=>{
+      const meta = dict[code];
+      if(meta){
+        if((meta.risk||'').includes('высок')) score -= 5;
+        reasons.push(`${code} — ${meta.name} (${meta.risk||'неизв.'})`);
+        if((meta.risk||'').includes('высок')) risky.push(code);
       }
-    }catch(e){ tried.push(ep.name + ' (err ' + (e.status||'') + ')'); }
+    });
+    const n = uniq.length;
+    if(n===0){ score+=8; reasons.push('Без добавок'); }
+    else if(n<=2){ score+=2; reasons.push(`Немного добавок: ${n}`); }
+    else if(n<=5){ score-=6; reasons.push(`Много добавок: ${n}`); }
+    else { score-=12; reasons.push(`Очень много добавок: ${n}`); }
+    if(risky.length){ reasons.push('Есть потенциально рискованные добавки: '+risky.join(', ')); }
   }
-  for(const s of searches){
-    try{
-      const data = await fetchJSON(s.url, s.params);
-      tried.push(s.name);
-      const prod = pickBest(data && data.products);
-      if(prod){ return { product: prod, source: s.name, tried }; }
-    }catch(e){ tried.push(s.name + ' (err ' + (e.status||'') + ')'); }
+
+  // allergens
+  let allergens = listify(p.allergens_tags).concat(listify(p.traces_tags)).map(a=>String(a).split(':').pop());
+  allergens = Array.from(new Set(allergens)).filter(Boolean);
+  if(allergens.length){
+    const dict = DATA.allergens || {};
+    const names = allergens.map(k=> dict[k] || k).slice(0,6);
+    score -= 6; reasons.push('Аллергены/следы: '+names.join(', '));
   }
-  return { notFound: true, tried };
+
+  // NOVA
+  let nova = parseInt(p.nova_group || p.nova_groups);
+  if(Number.isFinite(nova)){
+    if(nova===1) { score+=10; reasons.push('NOVA 1 — минимально обработанный'); }
+    else if(nova===2){ score+=5; reasons.push('NOVA 2 — базовая обработка'); }
+    else if(nova===3){ score-=5; reasons.push('NOVA 3 — обработанный'); }
+    else if(nova>=4){ score-=12; reasons.push('NOVA 4 — ультрапереработанный'); }
+  }
+
+  // nutriments thresholds (use local rules)
+  const n = p.nutriments || {};
+  const sugar = getFloat(n['sugars_100g']);
+  const salt  = getFloat(n['salt_100g']);
+  const satfat= getFloat(n['saturated-fat_100g']) ?? getFloat(n['saturated_fat_100g']);
+  const t = lr.thresholds||{};
+  if(sugar!=null){
+    if(sugar <= Math.min(2.5, t.sugar_low_g_per_100g||2.5)){ score+=6; reasons.push(`Низкий сахар: ${sugar} г/100г`); }
+    else if(sugar <= (t.sugar_medium_g_per_100g||5)){ score+=2; reasons.push(`Умеренный сахар: ${sugar} г/100г`); }
+    else if(sugar <= (t.sugar_high_g_per_100g||10)){ score-=4; reasons.push(`Повышенный сахар: ${sugar} г/100г`); }
+    else { score-=10; reasons.push(`Очень высокий сахар: ${sugar} г/100г`); }
+  }
+  if(salt!=null){
+    if(salt <= (t.salt_low_g_per_100g||0.3)){ score+=4; reasons.push(`Низкая соль: ${salt} г/100г`); }
+    else if(salt <= (t.salt_medium_g_per_100g||1.2)){ score+=1; reasons.push(`Умеренная соль: ${salt} г/100г`); }
+    else if(salt <= (t.salt_high_g_per_100g||2)){ score-=4; reasons.push(`Повышенная соль: ${salt} г/100г`); }
+    else { score-=8; reasons.push(`Очень высокая соль: ${salt} г/100г`); }
+  }
+  if(satfat!=null){
+    if(satfat<=1.5){ score+=3; reasons.push(`Низкие насыщенные жиры: ${satfat} г/100г`); }
+    else if(satfat<=5){ reasons.push(`Умеренные насыщенные жиры: ${satfat} г/100г`); }
+    else { score-=6; reasons.push(`Высокие насыщенные жиры: ${satfat} г/100г`); }
+  }
+
+  // ingredients length
+  let ingN = p.ingredients_n;
+  if(ingN==null && Array.isArray(p.ingredients)) ingN = p.ingredients.length;
+  if(Number.isFinite(ingN)){
+    if(ingN<=5){ score+=4; reasons.push(`Короткий список ингредиентов: ${ingN}`); }
+    else if(ingN<=10){ reasons.push(`Средний список ингредиентов: ${ingN}`); }
+    else { score-=4; reasons.push(`Длинный список ингредиентов: ${ingN}`); }
+  }
+
+  score = Math.round(Math.max(0, Math.min(100, score)));
+  const light = score>=70 ? '🟢 зелёный' : (score>=40 ? '🟡 жёлтый' : '🔴 красный');
+  reasons.unshift(`Светофор: ${light}`);
+  return { score, reasons, light };
 }
 
-async function searchAlternativesDual(p, minSame, minGlobal, limitEach=5){
+function titleOf(p){
+  const brand = String(p.brands||'').split(',')[0].trim();
+  let name = p.product_name_ru || p.product_name_he || p.product_name || p.generic_name || 'Без названия';
+  name = String(name);
+  if(brand && !name.toLowerCase().includes(brand.toLowerCase())){
+    return `${brand} — ${name}`;
+  }
+  return name || 'Без названия';
+}
+function isIL(p){ const code=String(p.code||''); if(code.startsWith('729')) return true;
+  const ct=listify(p.countries_tags).map(x=>String(x).toLowerCase()); return ct.some(c=>c.includes('israel')); }
+
+function renderHead(p, s, source, tried){
+  const badge = `<span class="badge ${s.score>=70?'good':(s.score>=40?'warn':'bad')}">${s.light} • ${s.score}/100</span>`;
+  return `<div class="card">
+    <div class="title">${esc(titleOf(p))}</div>
+    <div class="code">Штрих-код: ${esc(p.code||'')}</div>
+    <div style="margin-top:8px">${badge}</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <div class="pill">NOVA: ${esc(p.nova_group || p.nova_groups || '—')}</div>
+      <div class="pill">Nutri-Score: ${esc(((p.nutriscore_grade||p.nutrition_grades||'')+'').toUpperCase()||'—')}</div>
+      ${isIL(p)?'<div class="pill">🇮🇱 Израиль</div>':''}
+      <div class="pill">Источник: ${esc(source||'-')}</div>
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-weight:700;margin-bottom:6px">Причины/факторы:</div>
+      <ul>${s.reasons.map(r=>`<li>${esc(r)}`).join('')}</ul>
+    </div>
+  </div>`;
+}
+
+async function searchAlternatives(p, minScore=60){
   const fields = "product_name,product_name_ru,product_name_he,brands,additives_n,additives_tags,allergens_tags,traces_tags,nutriscore_grade,nutrition_grades,nutriments,nova_group,ingredients,ingredients_n,labels_tags,labels_old,code,categories_tags,countries_tags";
-  const categories = listify(p.categories_tags);
-  const paramsSame = { fields, page_size: 80, sort_by: "unique_scans_n", json: 1, lc: 'he', cc: 'il' };
-  if(categories.length){ paramsSame.categories_tags = categories[0]; }
-  else { paramsSame.search_terms = formatTitle(p).split('—').pop().trim(); }
-  const sameData = await fetchJSON(SEARCH_WORLD, paramsSame);
-  const sameProducts = sameData.products || [];
-  const sameScored = sameProducts.map(x=>({ p:x, ...scoreProduct(x) }));
-  sameScored.sort((a,b)=> (b.score + (isIL(b.p)?0.6:0)) - (a.score + (isIL(a.p)?0.6:0)));
-  const sameOut = [];
-  for(const it of sameScored){
-    if(it.score >= minSame && it.p.code !== p.code){
-      sameOut.push({score: it.score, p: it.p});
-      if(sameOut.length>=limitEach) break;
-    }
-  }
-  const paramsGlobal = { fields, page_size: 120, sort_by: "unique_scans_n", json:1, categories_tags: "en:waters,en:spring-waters,en:mineral-waters" };
-  const globalData = await fetchJSON(SEARCH_WORLD, paramsGlobal);
-  const globalProducts = globalData.products || [];
-  const globalScored = globalProducts.map(x=>({ p:x, ...scoreProduct(x) }));
-  globalScored.sort((a,b)=> (b.score + (isIL(b.p)?0.6:0)) - (a.score + (isIL(a.p)?0.6:0)));
-  const globalOut = [];
-  for(const it of globalScored){
-    if(it.score >= minGlobal && it.p.code !== p.code){
-      globalOut.push({score: it.score, p: it.p});
-      if(globalOut.length>=limitEach) break;
-    }
-  }
-  return { sameOut, globalOut };
-}
-
-function badgeClass(light){
-  if(light.includes('зелёный')) return 'badge good';
-  if(light.includes('жёлтый')) return 'badge warn';
-  return 'badge bad';
-}
-function renderProduct(p, sr, metaSource, triedList){
-  const title = formatTitle(p);
-  const code = esc(p.code || '');
-  const badge = `<span class="${badgeClass(sr.light)}"><span class="light">${esc(sr.light)}</span> <span class="score">${sr.score}/100</span></span>`;
-  const tried = triedList && triedList.length ? `<div class="note">Источник: ${esc(metaSource)} • Пробовали: ${esc(triedList.join(', '))}</div>` : '';
-  return `
-    <div class="card">
-      <div class="title">${esc(title)}</div>
-      <div class="code">Штрих-код: ${code}</div>
-      <div style="margin-top:10px">${badge}</div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <div class="pill">NOVA: ${esc(p.nova_group || p.nova_groups || '—')}</div>
-        <div class="pill">Nutri-Score: ${esc(((p.nutriscore_grade||p.nutrition_grades||'')+'').toUpperCase()||'—')}</div>
-        ${isIL(p)?'<div class="pill">🇮🇱 Израиль</div>':''}
-      </div>
-      ${tried}
-      <div style="margin-top:12px">
-        <div style="font-weight:700;margin-bottom:6px">Причины/факторы:</div>
-        <ul>${sr.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
-      </div>
-    </div>
-  `;
-}
-function renderAlts(title, items){
-  if(!items || !items.length) return `
-    <div class="card">
-      <div class="title">${esc(title)}</div>
-      <div class="note">Подходящих вариантов не найдено.</div>
-    </div>`;
-  return `
-    <div class="card">
-      <div class="title">${esc(title)}</div>
-      <div class="grid">
-        ${items.map(it=>{
-          const p = it.p;
-          return `<div class="alt-item">
-            <div class="alt-top">
-              <div style="font-weight:700">${esc(formatTitle(p))}</div>
-              <div class="${it.score>=70?'good':(it.score>=40?'warn':'bad')}">${it.score}/100</div>
-            </div>
-            <div class="code">Штрих-код: ${esc(p.code||'')}</div>
-            <div class="note">${isIL(p)?'🇮🇱 Израиль':''}</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-  `;
-}
-function setBusy(b){ $('#checkBtn').disabled = b; $('#demoBtn').disabled = b; $('#camBtn').disabled = b; $('#stopBtn').disabled = !b; }
-function setOvStatus(m){ const s=$('#ovStatus'); if(s) s.textContent=m; }
-
-// ====== CAMERA ======
-let codeReader = null;
-let currentDeviceId = null;
-let currentTrack = null;
-let scanBusy = false;
-
-function labelScore(lbl){
-  const s = (lbl||'').toLowerCase();
-  let score = 0;
-  if(/back|rear|задн/.test(s)) score += 3;
-  if(/wide|1x|основн|main|стандар/.test(s)) score += 4;
-  if(/tele|теле|2x|3x|zoom/.test(s)) score -= 4;
-  if(/ultra|ультра|0\.5x|0,5x/.test(s)) score -= 2;
-  if(/front|передн/.test(s)) score -= 3;
-  return score;
-}
-
-async function ensurePermissionLabels(){
+  const params = { fields, page_size: 80, sort_by: "unique_scans_n", json: 1, lc: 'he', cc: 'il' };
+  const cat = listify(p.categories_tags);
+  if(cat.length) params.categories_tags = cat[0];
+  else params.search_terms = titleOf(p).split('—').pop().trim();
   try{
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    s.getTracks().forEach(t => t.stop());
-  }catch(e){}
+    const d = await fetchJSON(API.SEARCH_OFF, params);
+    const scored = (d.products||[]).map(x=>({ p:x, ...scoreProduct(x) }));
+    scored.sort((a,b)=> (b.score + (isIL(b.p)?0.6:0)) - (a.score + (isIL(a.p)?0.6:0)));
+    const out = []; for(const it of scored){ if(it.score>=minScore && it.p.code!==p.code){ out.push(it); if(out.length>=5) break; } }
+    return out;
+  }catch(e){ return []; }
 }
+
+function renderAlts(title, items){
+  if(!items || !items.length) return '';
+  return `<div class="card">
+    <div class="title">${esc(title)}</div>
+    <div class="grid">
+      ${items.map(it=> `<div class="alt">
+        <div style="display:flex;justify-content:space-between;gap:10px">
+          <div style="font-weight:700">${esc(titleOf(it.p))}</div>
+          <div class="${it.score>=70?'good':(it.score>=40?'warn':'bad')}">${it.score}/100</div>
+        </div>
+        <div class="code">Штрих-код: ${esc(it.p.code||'')}</div>
+        <div class="note">${isIL(it.p)?'🇮🇱 Израиль':''}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ====== UI / CAMERA (минимум логики) ======
+let codeReader=null, currentDeviceId=null, soundOn=true;
+function setStatus(m){ const s=$('#ovStatus'); if(s) s.textContent=m; }
+function beep(){ try{ new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg').play(); }catch(e){} }
 
 async function enumerateCameras(){
-  await ensurePermissionLabels();
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const cams = devices.filter(d => d.kind === 'videoinput')
-                      .map(d => ({ deviceId: d.deviceId, label: d.label||'' }));
-  cams.sort((a,b) => labelScore(b.label) - labelScore(a.label));
-  return cams;
-}
-
-async function listCamerasToSelect(cams){
-  const sel = $('#cameraSelect');
-  sel.innerHTML = '';
-  cams.forEach((c, i) => {
-    const opt = document.createElement('option');
-    opt.value = c.deviceId;
-    opt.textContent = c.label || `Камера ${i+1}`;
-    sel.appendChild(opt);
-  });
-  if(cams.length){
-    currentDeviceId = cams[0].deviceId;
-    sel.value = currentDeviceId;
-    $('#camName').textContent = 'Текущая: ' + (cams[0].label || 'задняя камера');
-  }
+  try{ const s=await navigator.mediaDevices.getUserMedia({video:true}); s.getTracks().forEach(t=>t.stop()); }catch(e){}
+  const dev=await navigator.mediaDevices.enumerateDevices();
+  return dev.filter(d=>d.kind==='videoinput');
 }
 
 async function startCamera(){
-  try{
-    initAudio();
-    setOvStatus('Открываю камеру…');
-    $('#camWrap').style.display = 'flex';
-    if(!codeReader){ codeReader = new ZXing.BrowserMultiFormatReader(); }
-    const cams = await enumerateCameras();
-    if(!cams.length){
-      alert('Камеры не найдены или нет прав. Разреши доступ к камере.');
-      $('#camWrap').style.display = 'none';
-      return;
-    }
-    await listCamerasToSelect(cams);
-
-    const video = $('#preview');
-    setBusy(true);
-
-    const formats = [
-      ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E,
-      ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.CODE_39
-    ];
-    codeReader?.hints?.set?.(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-
-    const constraints = { video: { deviceId: { exact: currentDeviceId }, facingMode: 'environment' } };
-    setOvStatus('Навожу фокус…');
-    await codeReader.decodeFromConstraints(constraints, video, (result, err) => {
-      if(scanBusy) return;
-      if(result){
-        const text = String(result.getText()).trim();
-        if(text.length===13 && isValidEAN13(text)){
-          scanBusy = true;
-          $('#barcode').value = text;
-          setOvStatus('Нашёл код: ' + text);
-          beep(920,120); vibrate(40);
-          stopCamera();
-          run().finally(()=> scanBusy=false);
-        }else{
-          setOvStatus('Код распознан криво — подержи ровнее');
-        }
-      }else{
-        setOvStatus('Ищу штрих-код…');
-      }
-    });
-
-    const stream = video.srcObject;
-    currentTrack = stream ? stream.getVideoTracks()[0] : null;
-    setupControlsForTrack(currentTrack);
-
-  } catch(e){
-    alert('Не удалось открыть камеру: ' + (e.message||e) + '\nНа HTTPS доступ стабильнее. На iPhone — Safari.');
-    $('#camWrap').style.display = 'none';
-  } finally {
-    setBusy(false);
-  }
-}
-
-function setupControlsForTrack(track){
-  const zoom = $('#zoom'); const zv = $('#zoomVal');
-  const torchBtn = $('#torchBtn'); const focusBtn = $('#focusBtn');
-
-  zoom.disabled = torchBtn.disabled = focusBtn.disabled = true;
-  if(!track) return;
-
-  const caps = track.getCapabilities ? track.getCapabilities() : {};
-  const settings = track.getSettings ? track.getSettings() : {};
-
-  if(caps.zoom){
-    zoom.min = caps.zoom.min || 1;
-    zoom.max = caps.zoom.max || 1;
-    zoom.step = caps.zoom.step || 0.01;
-    const cur = settings.zoom || 1;
-    zoom.value = cur;
-    zv.textContent = Number(cur).toFixed(1);
-    zoom.oninput = async (e)=>{
-      try{
-        const val = parseFloat(e.target.value);
-        await track.applyConstraints({ advanced: [{ zoom: val }] });
-        zv.textContent = val.toFixed(1);
-      }catch(err){}
-    };
-    zoom.disabled = false;
-  }
-  if(caps.torch){
-    let on = false;
-    torchBtn.onclick = async ()=>{
-      try{
-        on = !on;
-        await track.applyConstraints({ advanced: [{ torch: on }] });
-        torchBtn.textContent = on ? 'Фонарик ⬤' : 'Фонарик';
-      }catch(err){ toast('Фонарик недоступен на этой камере'); }
-    };
-    torchBtn.disabled = false;
-  }
-  focusBtn.onclick = async ()=>{
-    try{
-      const s = track.getSettings();
-      const cur = s.zoom || 1;
-      const bump = Math.min((cur + 0.06), (caps.zoom?.max || (cur+0.06)));
-      if(caps.zoom){
-        await track.applyConstraints({ advanced: [{ zoom: bump }] });
-        await new Promise(r=>setTimeout(r, 130));
-        await track.applyConstraints({ advanced: [{ zoom: cur }] });
-      } else {
-        stopCamera();
-        startCamera();
-      }
-    }catch(err){}
-  };
-  focusBtn.disabled = false;
-}
-
-function stopCamera(){
-  try{ codeReader && codeReader.reset(); } catch(e){}
+  $('#camWrap').style.display='flex';
+  if(!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
+  const cams = await enumerateCameras();
+  const sel = $('#cameraSelect'); sel.innerHTML='';
+  cams.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.deviceId; o.textContent=c.label||`Камера ${i+1}`; sel.appendChild(o); });
+  currentDeviceId = cams[0]?.deviceId;
+  sel.value = currentDeviceId||'';
   const video = $('#preview');
-  if(video && video.srcObject){
-    const tracks = video.srcObject.getTracks();
-    tracks.forEach(t => t.stop());
-    video.srcObject = null;
-  }
-  currentTrack = null;
-  $('#stopBtn').disabled = true;
-  setOvStatus('Камера остановлена');
+  setStatus('Ищу штрих-код…');
+  await codeReader.decodeFromConstraints({ video: { deviceId: currentDeviceId ? {exact: currentDeviceId}: undefined, facingMode:'environment' } }, video, (res,err)=>{
+    if(res){
+      const code = String(res.getText()).trim();
+      if(code.length===13 && isValidEAN13(code)){
+        $('#barcode').value = code; beep(); stopCamera(); run();
+      }
+    }
+  });
 }
+function stopCamera(){ try{ codeReader && codeReader.reset(); }catch(e){} const v=$('#preview'); if(v && v.srcObject){ v.srcObject.getTracks().forEach(t=>t.stop()); v.srcObject=null; } $('#stopBtn').disabled=true; }
 
-$('#cameraSelect').addEventListener('change', async ()=>{
-  const sel = $('#cameraSelect');
-  $('#camName').textContent = 'Переключаюсь на: ' + (sel.selectedOptions[0]?.textContent || 'камера');
-  currentDeviceId = sel.value;
-  stopCamera();
-  await startCamera();
-});
-$('#soundBtn').addEventListener('click', ()=>{
-  soundOn = !soundOn;
-  $('#soundBtn').textContent = 'Звук: ' + (soundOn ? 'вкл' : 'выкл');
-});
+$('#camBtn').addEventListener('click', startCamera);
+$('#stopBtn').addEventListener('click', stopCamera);
+$('#soundBtn').addEventListener('click', e=>{ soundOn=!soundOn; e.target.textContent = 'Звук: '+(soundOn?'вкл':'выкл'); });
 
-// ======== APP logic =========
-const hist = [];
-function pushHistory(code){
-  if(hist.includes(code)) return;
-  hist.unshift(code);
-  if(hist.length>8) hist.pop();
-  const box = $('#hist');
-  box.innerHTML = hist.map(c=>`<span class="chip" data-code="${esc(c)}">${esc(c)}</span>`).join('');
+// ====== APP ======
+const hist=[];
+function pushHistory(code){ if(hist.includes(code)) return; hist.unshift(code); if(hist.length>8) hist.pop();
+  const box=$('#hist'); box.innerHTML=hist.map(c=>`<span class="chip" data-code="${esc(c)}">${esc(c)}</span>`).join('');
   box.querySelectorAll('.chip').forEach(ch=> ch.addEventListener('click', ()=>{ $('#barcode').value=ch.dataset.code; run(); }));
 }
 
 async function run(){
   const bc = $('#barcode').value.trim();
   if(!/^[0-9]{6,}$/.test(bc)){ alert('Введите числовой штрих-код (минимум 6 цифр)'); return; }
-  setBusy(true); $('#out').innerHTML = '';
-  try{
-    const { product, source, tried, notFound } = await deepFetch(bc);
-    if(notFound){
-      $('#out').innerHTML = `<div class="card">
-        <div class="title">Карточки не найдено в открытых базах</div>
-        <div class="note">Пробовали: ${esc((tried||[]).join(', ')||'-')}.</div>
-        <div class="note" style="margin-top:8px">Это нормально для местных штрих-кодов. Временно покажу аналоги по бренду/категории, когда появится состав — досчитаем балл.</div>
-      </div>`;
-      pushHistory(bc);
-      return;
+  $('#out').innerHTML = '';
+  const {product, source, tried, notFound} = await deepFetch(bc);
+  if(notFound){
+    const seed = DATA.alternativesSeed || {};
+    const cat = 'en:table-water'; // дефолтный пример, пока нет категории
+    const seedCodes = seed[cat]||[];
+    let seedHtml = '';
+    if(seedCodes.length){
+      seedHtml = `<div class="card"><div class="title">Альтернативы (seed)</div><div class="grid">${
+        seedCodes.map(code=> `<div class="alt"><div class="code">Штрих-код: ${esc(code)}</div></div>`).join('')
+      }</div></div>`;
     }
-    const sres = scoreProduct(product||{});
-    const head = renderProduct(product, sres, source, tried);
-    const minSame = Math.max(60, sres.score);
-    let altsHTML = '';
-    try{
-      const { sameOut, globalOut } = await searchAlternativesDual(product, minSame, 85, 5);
-      altsHTML = renderAlts('Альтернативы в той же категории', sameOut) + renderAlts('Здоровее в целом', globalOut);
-    }catch(e){ altsHTML = ''; }
-    $('#out').innerHTML = head + altsHTML
-      + `<div class="note" style="margin-top:12px">Это предварительная эвристическая оценка. Для медицинских решений консультируйтесь со специалистами.</div>`;
+    $('#out').innerHTML = `<div class="card">
+      <div class="title">Карточка не найдена в открытых базах</div>
+      <div class="note">Пробовали: ${esc((tried||[]).join(', ')||'-')}.</div>
+      <div class="note">Товар может быть в продаже в Израиле (локальные прайс-фиды), но состав ещё не внесён.</div>
+    </div>` + seedHtml;
     pushHistory(bc);
-  } catch(e){
-    $('#out').innerHTML = `<div class="card"><div class="title">Ошибка</div><div class="note">${esc(String(e.message||e))}. На HTTPS доступ к камере стабильнее (Safari/iOS).</div></div>`;
-  } finally {
-    setBusy(false);
+    return;
   }
+  const s = scoreProduct(product||{});
+  const head = renderHead(product, s, source, tried);
+  let alts = [];
+  try{ alts = await searchAlternatives(product, Math.max(60, s.score)); }catch(e){}
+  $('#out').innerHTML = head + renderAlts('Альтернативы', alts) +
+    `<div class="note" style="margin-top:10px">Это эвристическая оценка. Для медицинских решений — к специалистам.</div>`;
+  pushHistory(bc);
 }
 
-$('#checkBtn').addEventListener('click', run);
-$('#demoBtn').addEventListener('click', ()=>{ $('#barcode').value='5449000000996'; run(); });
-$('#barcode').addEventListener('keydown', (e)=>{ if(e.key==='Enter') run(); });
-$('#camBtn').addEventListener('click', startCamera);
-$('#stopBtn').addEventListener('click', stopCamera);
+// Init
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await loadData();
+  $('#checkBtn').addEventListener('click', run);
+  $('#demoBtn').addEventListener('click', ()=>{ $('#barcode').value='5449000000996'; run(); });
+  $('#barcode').addEventListener('keydown', (e)=>{ if(e.key==='Enter') run(); });
+});
 </script>
 </body>
 </html>

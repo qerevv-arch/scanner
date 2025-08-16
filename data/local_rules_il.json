@@ -1,0 +1,19 @@
+{
+  "barcode_prefix_il": "729",
+  "thresholds": {
+    "sugar_high_g_per_100g": 10.0,
+    "salt_high_g_per_100g": 1.2,
+    "fat_high_g_per_100g": 17.5
+  },
+  "labels_positive": [
+    "kosher",
+    "organic",
+    "bio"
+  ],
+  "ui_language_priority": [
+    "ru",
+    "he",
+    "en"
+  ],
+  "notes": "Пороговые значения можно откорректировать позже по израильским нормам."
+}
