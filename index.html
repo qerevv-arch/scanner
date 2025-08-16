@@ -125,17 +125,21 @@ async function loadJSON(path){
   }catch(e){ console.warn('loadJSON failed', path, e); return null; }
 }
 
+// абсолютная папка с данными на GitHub Pages
+const DATA_BASE = 'https://qerevv-arch.github.io/scanner/data/';
+
 async function loadData(){
-  DATA.providers      = await loadJSON('data/providers.config.json');
-  DATA.additives      = await loadJSON('data/additives_ru.json');
-  DATA.allergens      = await loadJSON('data/allergens_ru.json');
-  DATA.localRules     = await loadJSON('data/local_rules_il.json');
-  DATA.alternativesSeed = await loadJSON('data/alternatives_seed.json');
-  DATA.brandsMap      = await loadJSON('data/brands_map.json');
-  DATA.ilPriceFeeds   = await loadJSON('data/il_price_feeds_sources.json');
+  DATA.providers        = await loadJSON(DATA_BASE + 'providers.config.json');
+  DATA.additives        = await loadJSON(DATA_BASE + 'additives_ru.json');
+  DATA.allergens        = await loadJSON(DATA_BASE + 'allergens_ru.json');
+  DATA.localRules       = await loadJSON(DATA_BASE + 'local_rules_il.json');
+  DATA.alternativesSeed = await loadJSON(DATA_BASE + 'alternatives_seed.json');
+  DATA.brandsMap        = await loadJSON(DATA_BASE + 'brands_map.json');
+  DATA.ilPriceFeeds     = await loadJSON(DATA_BASE + 'il_price_feeds_sources.json');
+
   const ok = DATA.providers && DATA.additives && DATA.allergens && DATA.localRules;
   $('#dataStatus').textContent = ok ? 'загружены' : 'частично';
-  $('#dataStatus').className = ok ? 'ok' : 'err';
+  $('#dataStatus').className   = ok ? 'ok' : 'err';
   return ok;
 }
 
