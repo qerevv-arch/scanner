@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Сканер «чистых продуктов» — FIX</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#0c1022;color:#e7e9ff}
+    .wrap{max-width:980px;margin:0 auto;padding:16px}
+    .card{background:#11162a;border:1px solid #2a2f4a;border-radius:14px;padding:14px;margin:12px 0}
+    input,button,select{font:inherit}
+    input[type="text"]{width:100%;padding:10px;border-radius:10px;border:1px solid #2a2f4a;background:#0d1228;color:#e7e9ff}
+    button{padding:10px 14px;border:0;border-radius:10px;background:#2b57ff;color:#fff;cursor:pointer}
+    .mute{background:#1a1f36;color:#e7e9ff}
+    .ok{color:#7fffb7}.err{color:#ff8f8f}
+    .pill{display:inline-block;padding:6px 10px;border:1px solid #2a2f4a;border-radius:999px;background:#0d1020;color:#a8b2d1;margin-right:6px;font-size:12px}
+  </style>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1 1 260px">
+          <div style="font-size:12px;color:#a8b2d1;margin-bottom:6px">Штрих‑код</div>
+          <input id="barcode" type="text" placeholder="например: 5449000000996" inputmode="numeric" />
+        </div>
+        <button id="checkBtn">Проверить</button>
+        <button id="demoBtn" class="mute">Демо</button>
+        <button id="camBtn" class="mute">Камера</button>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#a8b2d1">
+        Данные: <span id="dataStatus" class="err">проверяю…</span>
+      </div>
+    </div>
+
+    <div id="camWrap" class="card" style="display:none">
+      <div style="font-weight:700;margin-bottom:6px">Камера</div>
+      <video id="preview" style="width:100%;max-height:360px;border-radius:10px;background:#000" muted playsinline></video>
+      <div style="margin-top:8px">
+        <select id="cameraSelect"></select>
+        <button id="stopBtn" class="mute" style="margin-left:8px">Стоп</button>
+      </div>
+    </div>
+
+    <div id="out"></div>
+
+    <div class="card" style="font-size:12px;color:#a8b2d1">
+      Источники: Open Food Facts • Open Beauty Facts • Open Products Facts. Личные данные не сохраняются.
+    </div>
+  </div>
+
+<script>
+// ====== КОНФИГ (АБСОЛЮТНЫЙ ПУТЬ К data/ ДЛЯ РЕПО scanner) ======
+const DATA_BASE = 'https://qerevv-arch.github.io/scanner/data/';
+
+// ====== ВСПОМОГАТЕЛЬНОЕ ======
+const $ = s => document.querySelector(s);
+function listify(x){ return Array.isArray(x) ? x : (x ? [x] : []); }
+function esc(s){ return String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]); }
+function isValidEAN13(code){ if(!/^[0-9]{13}$/.test(code)) return false; const d=code.split('').map(n=>+n); const c=d.pop(); const sum=d.reduce((a,v,i)=>a+v*(i%2?3:1),0); return ((10-sum%10)%10)===c; }
+async function loadJSON(url){ try{ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); } catch(e){ console.warn('loadJSON failed', url, e); return null; } }
+
+// ====== ЗАГРУЗКА ДАННЫХ ======
+const DATA = {providers:null, additives:null, allergens:null, localRules:null, alternativesSeed:null, brandsMap:null, ilPriceFeeds:null};
+
+async function loadData(){
+  DATA.providers        = await loadJSON(DATA_BASE + 'providers.config.json');
+  DATA.additives        = await loadJSON(DATA_BASE + 'additives_ru.json');
+  DATA.allergens        = await loadJSON(DATA_BASE + 'allergens_ru.json');
+  DATA.localRules       = await loadJSON(DATA_BASE + 'local_rules_il.json');
+  DATA.alternativesSeed = await loadJSON(DATA_BASE + 'alternatives_seed.json');
+  DATA.brandsMap        = await loadJSON(DATA_BASE + 'brands_map.json');
+  DATA.ilPriceFeeds     = await loadJSON(DATA_BASE + 'il_price_feeds_sources.json');
+  const ok = DATA.providers && DATA.additives && DATA.allergens && DATA.localRules;
+  $('#dataStatus').textContent = ok ? 'загружены' : 'частично';
+  $('#dataStatus').className   = ok ? 'ok' : 'err';
+  return ok;
+}
+
+// ====== API ======
+const API = {
+  OFF: (bc) => `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  OFF_HE: (bc) => `https://he.openfoodfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  BEU: (bc) => `https://world.openbeautyfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  PRD: (bc) => `https://world.openproductsfacts.org/api/v2/product/${encodeURIComponent(bc)}.json`,
+  SEARCH_OFF: `https://world.openfoodfacts.org/api/v2/search`
+};
+
+async function fetchJSON(url, params){
+  const u = new URL(url);
+  if(params) Object.entries(params).forEach(([k,v])=> u.searchParams.set(k,v));
+  const r = await fetch(u.toString()); if(!r.ok) throw new Error('HTTP '+r.status);
+  return await r.json();
+}
+
+function pickBest(products){ let best=null,score=-1;
+  for(const p of (products||[])){ let s=0;
+    if(p.product_name || p.product_name_he || p.product_name_ru) s+=4;
+    if(p.brands) s+=2;
+    if(p.ingredients_text || p.ingredients || p.ingredients_text_he) s+=3;
+    if(p.nutriments) s+=3;
+    if(p.nova_group || p.nova_groups) s+=1;
+    if(p.code) s+=1;
+    if(typeof p.completeness_score==='number') s+=Math.min(3,p.completeness_score);
+    if(s>score){score=s;best=p;}
+  } return best;
+}
+
+async function deepFetch(barcode){
+  // OFF world → he → Beauty → Products → OFF search
+  try{ const d=await fetchJSON(API.OFF(barcode)); if(d && (d.status===1||d.product)) return {product:d.product, source:'OFF world'}; }catch(e){}
+  try{ const d=await fetchJSON(API.OFF_HE(barcode)); if(d && (d.status===1||d.product)) return {product:d.product, source:'OFF he'}; }catch(e){}
+  try{ const d=await fetchJSON(API.BEU(barcode)); if(d && (d.status===1||d.product)) return {product:d.product, source:'Open Beauty'}; }catch(e){}
+  try{ const d=await fetchJSON(API.PRD(barcode)); if(d && (d.status===1||d.product)) return {product:d.product, source:'Open Products'}; }catch(e){}
+  try{ const d=await fetchJSON(API.SEARCH_OFF, { json:1, page_size: 40, code: barcode });
+       const p=pickBest(d.products); if(p) return {product:p, source:'OFF search'}; }catch(e){}
+  return { notFound:true };
+}
+
+// ====== ОЦЕНКА ======
+function getFloat(v){ const f=parseFloat(v); return Number.isFinite(f)?f:null; }
+function scoreProduct(p){
+  let score = 50, reasons = []; const lr=DATA.localRules||{thresholds:{sugar_high_g_per_100g:10,salt_high_g_per_100g:1.2}};
+  const labels = listify(p.labels_tags).concat(listify(p.labels_old)).map(x=>String(x).toLowerCase());
+  const positive = new Set((lr.labels_positive||[]).map(x=>String(x).toLowerCase()));
+  if(labels.some(x=> Array.from(positive).some(y=> x.includes(y)))){ score+=6; reasons.push('Положительные метки/сертификаты'); }
+
+  let additives = listify(p.additives_tags).map(a=>String(a).split(':').pop().toUpperCase());
+  if(additives.length){
+    const uniq=Array.from(new Set(additives)); const dict=DATA.additives||{};
+    const risky=[]; uniq.forEach(code=>{ const meta=dict[code]||dict['E'+code.replace(/[^\d]/g,'')]||null;
+      if(meta){ if((meta.risk||'').includes('высок')) score-=5; reasons.push(`${code} — ${meta.name} (${meta.risk||'неизв.'})`); if((meta.risk||'').includes('высок')) risky.push(code); }
+    });
+    const n=uniq.length; if(n===0){ score+=8; reasons.push('Без добавок'); }
+    else if(n<=2){ score+=2; reasons.push(`Немного добавок: ${n}`); }
+    else if(n<=5){ score-=6; reasons.push(`Много добавок: ${n}`); }
+    else { score-=12; reasons.push(`Очень много добавок: ${n}`); }
+    if(risky.length){ reasons.push('Есть потенциально рискованные добавки: '+risky.join(', ')); }
+  }
+
+  const n = p.nutriments||{};
+  const sugar=getFloat(n['sugars_100g']); const salt=getFloat(n['salt_100g']); const sat=getFloat(n['saturated-fat_100g'])??getFloat(n['saturated_fat_100g']);
+  const t=lr.thresholds||{};
+  if(sugar!=null){ if(sugar <= (t.sugar_low_g_per_100g||2.5)) score+=6;
+    else if(sugar <= (t.sugar_medium_g_per_100g||5)) score+=2;
+    else if(sugar <= (t.sugar_high_g_per_100g||10)) score-=4;
+    else score-=10; }
+  if(salt!=null){ if(salt <= (t.salt_low_g_per_100g||0.3)) score+=4;
+    else if(salt <= (t.salt_medium_g_per_100g||1.2)) score+=1;
+    else if(salt <= (t.salt_high_g_per_100g||2)) score-=4;
+    else score-=8; }
+  if(sat!=null){ if(sat<=1.5) score+=3; else if(sat>5) score-=6; }
+
+  let ingN=p.ingredients_n; if(ingN==null && Array.isArray(p.ingredients)) ingN=p.ingredients.length;
+  if(Number.isFinite(ingN)){ if(ingN<=5) score+=4; else if(ingN>10) score-=4; }
+
+  score = Math.round(Math.max(0,Math.min(100,score)));
+  const light = score>=70?'🟢 зелёный' : (score>=40?'🟡 жёлтый':'🔴 красный');
+  reasons.unshift(`Светофор: ${light}`);
+  return {score, reasons, light};
+}
+
+function titleOf(p){
+  const brand = String(p.brands||'').split(',')[0].trim();
+  let name = p.product_name_ru || p.product_name_he || p.product_name || p.generic_name || 'Без названия';
+  name = String(name);
+  if(brand && !name.toLowerCase().includes(brand.toLowerCase())) return `${brand} — ${name}`;
+  return name || 'Без названия';
+}
+
+function render(product, s, source){
+  return `<div class="card">
+    <div style="font-size:18px;font-weight:800">${esc(titleOf(product))}</div>
+    <div style="margin-top:6px" class="pill">${esc(s.light)} • ${s.score}/100</div>
+    <div style="margin-top:6px">
+      <span class="pill">NOVA: ${esc(product.nova_group || product.nova_groups || '—')}</span>
+      <span class="pill">Nutri-Score: ${esc(((product.nutriscore_grade||product.nutrition_grades||'')+'').toUpperCase()||'—')}</span>
+      <span class="pill">Источник: ${esc(source||'-')}</span>
+    </div>
+    <div style="margin-top:8px">
+      <div style="font-weight:700;margin-bottom:6px">Причины:</div>
+      <ul>${s.reasons.map(r=>`<li>${esc(r)}`).join('')}</ul>
+    </div>
+  </div>`;
+}
+
+// ====== UI ======
+async function run(){
+  const bc = $('#barcode').value.trim();
+  if(!/^[0-9]{6,}$/.test(bc)){ alert('Введите числовой штрих‑код'); return; }
+  $('#out').innerHTML = '';
+  const r = await deepFetch(bc);
+  if(r.notFound){ $('#out').innerHTML = `<div class="card">Карточка не найдена в открытых базах. Попробуйте другой штрих‑код.</div>`; return; }
+  const s = scoreProduct(r.product||{});
+  $('#out').innerHTML = render(r.product, s, r.source);
+}
+
+async function startCamera(){
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+  const video = document.getElementById('preview');
+  document.getElementById('camWrap').style.display='block';
+  try{
+    await codeReader.decodeFromVideoDevice(null, video, (res,err)=>{
+      if(res){ const code = String(res.getText()).trim(); if(isValidEAN13(code)){ document.getElementById('barcode').value=code; codeReader.reset(); run(); } }
+    });
+  }catch(e){ alert('Камера недоступна: '+e.message); }
+  document.getElementById('stopBtn').onclick = ()=>{ try{ codeReader.reset(); }catch(e){} document.getElementById('camWrap').style.display='none'; };
+}
+
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await loadData(); // статус появится сам
+  document.getElementById('checkBtn').onclick = run;
+  document.getElementById('demoBtn').onclick  = ()=>{ document.getElementById('barcode').value='5449000000996'; run(); };
+  document.getElementById('camBtn').onclick   = startCamera;
+});
+</script>
+</body>
+</html>
